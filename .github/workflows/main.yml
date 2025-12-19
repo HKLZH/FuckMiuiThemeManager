@@ -6,22 +6,43 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    # 添加环境变量定义
+    env:
+      VERSION: 1.0.0  # 设置默认版本号
+
     steps:
-      - uses: actions/checkout@v4
-      - name: set up JDK 11
-        uses: actions/setup-java@v3
+      - name: Checkout code
+        uses: actions/checkout@v4  # 升级到v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3  # 升级到v3
         with:
           java-version: 11
+          distribution: 'temurin'  # 添加发行版参数
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
       - name: Build with Gradle
         run: bash ./gradlew -PappVerName=${{ env.VERSION }} assembleRelease
+
+      - name: Find APK files  # 添加调试步骤定位APK
+        run: |
+          echo "搜索APK文件..."
+          find . -name "*.apk" -exec ls -lh {} \;
+
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4  # 升级到v4
         with:
           name: app-release
-          path: app/build/outputs/apk/release/
+          # 修正为常见APK路径（根据实际项目调整）
+          path: |
+            app/build/outputs/apk/release/*.apk
+            */build/outputs/apk/release/*.apk
+            build/outputs/apk/release/*.apk
+          retention-days: 7  # 添加自动清理
